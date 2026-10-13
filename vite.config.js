@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  base: "/PersonalSiteV2/",
+  base: "/",
   plugins: [tailwindcss()],
   esbuild: { jsx: "automatic" },
 });

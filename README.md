@@ -13,14 +13,14 @@ npm ci
 npm run dev
 ```
 
-Open the local URL printed by Vite, including `/PersonalSiteV2/`.
+Open the local URL printed by Vite.
 
 ```sh
 npm run build
 npm run preview
 ```
 
-The production build goes to `dist/`. Vite's base path is configured for the `PersonalSiteV2` GitHub Pages project path; change `base` in `vite.config.js` when using a different hosting path.
+The production build goes to `dist/`. Vite's base path is `/` so scripts, styles, and local images load from the root on Vercel and the custom domain.
 
 ## Content and behavior
 
@@ -38,4 +38,8 @@ The production build goes to `dist/`. Vite's base path is configured for the `Pe
 
 ## Hosting
 
-This repository includes the local app and its production build configuration. GitHub Pages must be configured separately to publish `dist/`; pushing source alone does not publish a live site.
+The Vercel project `personal-site-v2` is connected to this repository. Pushes to `main` create production deployments. Use the Vite framework preset, `npm run build`, and the `dist` output directory, with the repository root as the root directory. No environment variables or backend services are required.
+
+The primary site URL is `https://arshiafarrokhi.ir/`. Configure `www.arshiafarrokhi.ir` as a permanent redirect to the primary domain. DNS must match the records or nameservers displayed in the project's Vercel Domains settings; domain registration stays with the registrar. Vercel provisions HTTPS after DNS verification.
+
+This is a single page with native section fragments (for example, `/#work`), so it does not need a catch-all rewrite for client-side routes. When deliberately hosting under a subdirectory, override Vite's base for that build (for example, `npm run build -- --base=/PersonalSiteV2/`). Do not use that subdirectory base for Vercel root deployments.
