@@ -1,6 +1,13 @@
 @import "tailwindcss";
 @source "./App.jsx";
 @font-face {
+  font-family: "Desktop Serif";
+  src: url("/retro/serif-medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
   font-family: "Desktop Sans";
   src: url("/retro/ms-sans.woff2") format("woff2");
   font-weight: 400;
@@ -150,6 +157,7 @@ img {
   top: 10px;
   left: 7px;
   grid-template-columns: repeat(2, 100px);
+  grid-auto-rows: 102px;
   gap: 12px;
 }
 .desktop-shortcut {
@@ -163,7 +171,7 @@ img {
   line-height: 16px;
   text-align: center;
 }
-.desktop-shortcut > span {
+.desktop-shortcut > span:not(.shortcut-art) {
   background: #008080;
   color: #fff;
   padding: 5px;
@@ -171,8 +179,8 @@ img {
   min-height: 26px;
   overflow-wrap: anywhere;
 }
-.desktop-shortcut:hover > span,
-.desktop-shortcut:focus-visible > span {
+.desktop-shortcut:hover > span:not(.shortcut-art),
+.desktop-shortcut:focus-visible > span:not(.shortcut-art) {
   background: #000080;
 }
 .desktop-shortcut:active .pixel-icon {
@@ -182,6 +190,62 @@ img {
   position: absolute;
   bottom: calc(var(--bar-height) + 10px);
   right: 7px;
+}
+.shortcut-art {
+  display: block;
+  position: relative;
+  width: 50px;
+  height: 50px;
+}
+.shortcut-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  image-rendering: pixelated;
+}
+.window-project {
+  width: min(960px, 80vw);
+}
+.project-viewer-screen {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  padding: 16px;
+}
+.project-viewer-screen > img,
+.project-viewer-screen > .image-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.project-viewer-controls {
+  padding: 12px;
+  flex-shrink: 0;
+}
+.project-viewer-controls h2 {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.project-viewer-controls nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.project-viewer-controls output {
+  min-width: 54px;
+  text-align: center;
+}
+.project-viewer-controls nav > a:last-child {
+  margin-left: auto;
+}
+.article-body,
+.archive-body {
+  overflow-wrap: anywhere;
 }
 .desktop-workspace {
   position: absolute;
@@ -258,6 +322,7 @@ img {
   outline-color: #000;
 }
 .menu-bar {
+  position: relative;
   min-height: 32px;
   display: flex;
   align-items: center;
@@ -268,6 +333,14 @@ img {
   flex-shrink: 0;
   overflow: hidden;
   font-size: 16px;
+}
+.chrome-portrait {
+  position: absolute;
+  right: 2px;
+  top: 2px;
+  width: 49px;
+  height: 26px;
+  object-fit: cover;
 }
 .decorative-menus {
   display: flex;
@@ -748,9 +821,18 @@ a.toolbar-item:hover {
   min-height: 0;
   flex: 1;
   overflow: auto;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Desktop Serif", Georgia, "Times New Roman", serif;
+  font-weight: 500;
   font-size: 18px;
   line-height: 1.15;
+}
+.site-credits {
+  margin-top: 32px;
+  text-align: center;
+  text-decoration: underline;
+  font-family: "Desktop Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 400;
 }
 .about-display {
   font-family: "Times New Roman", Georgia, serif;
@@ -1079,6 +1161,7 @@ a.toolbar-item:hover {
 }
 .home-menu-items {
   flex: 1;
+  min-height: 0;
   overflow: auto;
   padding: 0 0 24px;
 }
@@ -1122,9 +1205,13 @@ a.toolbar-item:hover {
   transform: none;
 }
 .retro-scroll {
-  scrollbar-color: #c0c0c0 #dedede;
-  scrollbar-width: auto;
   overscroll-behavior: contain;
+}
+@supports not selector(::-webkit-scrollbar) {
+  .retro-scroll {
+    scrollbar-color: #c0c0c0 #dedede;
+    scrollbar-width: auto;
+  }
 }
 .retro-scroll::-webkit-scrollbar {
   width: 24px;
@@ -1142,8 +1229,22 @@ a.toolbar-item:hover {
 }
 .retro-scroll::-webkit-scrollbar-button:single-button {
   background-color: #c0c0c0;
-  border: 2px outset #fff;
+  border: 1px solid #373737;
+  border-top-color: #c0c0c0;
+  border-left-color: #c0c0c0;
+  box-shadow:
+    inset 1px 1px #fff,
+    inset -1px -1px #888;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 8px;
   height: 17px;
+}
+.retro-scroll::-webkit-scrollbar-button:vertical:decrement {
+  background-image: url("/retro/scroll-up.svg");
+}
+.retro-scroll::-webkit-scrollbar-button:vertical:increment {
+  background-image: url("/retro/scroll-down.svg");
 }
 @media (max-width: 809px) {
   :root {
@@ -1153,6 +1254,19 @@ a.toolbar-item:hover {
     width: 100vw;
     height: calc(100dvh - var(--bar-height));
     min-height: 0;
+  }
+  .window-project {
+    width: 100vw;
+  }
+  .project-viewer-screen {
+    padding: 8px;
+  }
+  .project-viewer-controls {
+    font-size: 14px;
+  }
+  .project-viewer-controls .classic-button {
+    font-size: 14px;
+    padding-inline: 8px;
   }
   .title-bar {
     min-height: 31px;
@@ -1167,6 +1281,9 @@ a.toolbar-item:hover {
   }
   .menu-bar > a {
     font-size: 14px;
+  }
+  .window-bookshelf .decorative-menus > span:nth-child(n + 4) {
+    display: none;
   }
   .explorer-toolbar {
     padding: 4px 12px;
@@ -1385,6 +1502,16 @@ a.toolbar-item:hover {
   .secret-body {
     padding: 16px;
     font-size: 14px;
+  }
+}
+@media (max-height: 500px) {
+  .window-login {
+    top: 0;
+  }
+  .window-login .title-bar {
+    position: sticky;
+    top: 0;
+    z-index: 1;
   }
 }
 @media (max-width: 359px) {

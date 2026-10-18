@@ -1,5 +1,10 @@
 {
-  "rewrites": [{ "source": "/((?!.*\\.).*)", "destination": "/index.html" }],
+  "rewrites": [
+    {
+      "source": "/((?!assets/|images/|retro/|favicon\\.svg).*)",
+      "destination": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

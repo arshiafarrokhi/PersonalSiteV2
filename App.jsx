@@ -20,7 +20,7 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { ROUTES, SITE } from "./content.js";
+import { PROJECTS, ROUTES, SITE } from "./content.js";
 
 const REDUCED_QUERY = "(prefers-reduced-motion: reduce)";
 const readReducedMotion = () =>
@@ -47,6 +47,15 @@ const normalizedRoutes = new Map(
 const ERROR_ROUTE = { path: "/404", title: "404 ERROR", kind: "error" };
 const iconPath = (name) =>
   `/retro/${name}.${name === "clouds" ? "avif" : "png"}`;
+function folderAddress(route) {
+  const segments = [];
+  let current = route;
+  while (current && ![SITE.documents, "/desktop"].includes(current.path)) {
+    segments.unshift(current.title.toUpperCase());
+    current = routeMap.get(current.parent);
+  }
+  return `C:\\WINDOWS\\DIRECTORY\\${SITE.directory}\\${segments.join("\\")}`;
+}
 
 function Icon({ name = "folder", size = 25, className = "" }) {
   return (
@@ -56,6 +65,11 @@ function Icon({ name = "folder", size = 25, className = "" }) {
       alt=""
       width={size}
       height={size}
+      style={{
+        width: size,
+        height: size,
+        objectFit: name === SITE.portrait ? "cover" : undefined,
+      }}
       draggable="false"
     />
   );
@@ -69,6 +83,22 @@ function SiteLink({ to, children, ...props }) {
     <Link to={to} {...props}>
       {children}
     </Link>
+  );
+}
+function ShortcutArt({ name, shortcut = false }) {
+  return (
+    <span className="shortcut-art">
+      <Icon name={name} size={50} />
+      {shortcut && (
+        <img
+          className="shortcut-overlay"
+          src={iconPath("shortcut")}
+          width="15"
+          height="15"
+          alt=""
+        />
+      )}
+    </span>
   );
 }
 function ResponsiveImage({ src, alt, className = "", eager = false }) {
@@ -117,11 +147,9 @@ function WindowFrame({
   const heading = useRef(null);
   const x = useMotionValue(0),
     y = useMotionValue(0);
-  const [mobile, setMobile] = useState(() => window.innerWidth <= 809);
   const fullscreen = route.kind === "secret";
   useEffect(() => {
     const resize = () => {
-      setMobile(window.innerWidth <= 809);
       x.set(0);
       y.set(0);
     };
@@ -137,7 +165,7 @@ function WindowFrame({
       aria-labelledby="active-window-title"
       data-testid="active-window"
       className={`window window-${route.kind} ${className}`}
-      drag={!mobile && !fullscreen}
+      drag={!fullscreen}
       dragControls={controls}
       dragListener={false}
       dragConstraints={workspace}
@@ -152,7 +180,7 @@ function WindowFrame({
       <header
         className="title-bar"
         onPointerDown={(event) => {
-          if (!mobile && !fullscreen && event.button === 0)
+          if (window.innerWidth > 809 && !fullscreen && event.button === 0)
             controls.start(event);
         }}
       >
@@ -220,6 +248,15 @@ function MenuBar({ route, compact = false, extra }) {
         ))}
       </div>
       {extra}
+      {route.kind === "explorer" && (
+        <img
+          className="chrome-portrait"
+          src={SITE.portrait}
+          width="49"
+          height="26"
+          alt=""
+        />
+      )}
     </div>
   );
 }
@@ -273,11 +310,8 @@ function ExplorerToolbar({ route, archive = false }) {
         <span>Address</span>
         <div className="address-value" aria-label="Current folder path">
           {archive
-            ? SITE.reference
-              ? "https://www.adamsarchive.com"
-              : "arshiafarrokhi.ir/archive"
-            : route.address ||
-              `C:\\WINDOWS\\DIRECTORY\\${SITE.directory}\\${route.path === SITE.documents ? "" : route.title.toUpperCase()}`}
+            ? "arshiafarrokhi.ir/archive"
+            : route.address || folderAddress(route)}
         </div>
       </div>
     </>
@@ -351,16 +385,12 @@ function Login({ route }) {
     >
       <div className="login-body">
         <button
-          className={`login-portrait inset-frame ${clicked && !SITE.reference ? "portrait-alternate" : ""}`}
+          className={`login-portrait inset-frame ${clicked ? "portrait-alternate" : ""}`}
           aria-label="Change portrait appearance"
           aria-pressed={clicked}
           onClick={() => setClicked(!clicked)}
         >
-          <ResponsiveImage
-            src={clicked ? SITE.portraitAlt : SITE.portrait}
-            alt={SITE.name}
-            eager
-          />
+          <ResponsiveImage src={SITE.portrait} alt={SITE.name} eager />
         </button>
         <form
           className="login-form"
@@ -409,39 +439,49 @@ function Login({ route }) {
     </WindowFrame>
   );
 }
-function MediaWindow({ route }) {
+function ProjectViewer({ route }) {
+  const index = PROJECTS.findIndex((project) => project.id === route.projectId);
+  const previous = PROJECTS[(index + PROJECTS.length - 1) % PROJECTS.length];
+  const next = PROJECTS[(index + 1) % PROJECTS.length];
   return (
     <WindowFrame
-      route={{
-        ...route,
-        windowTitle: `${SITE.shortName}'s Media Player`,
-        icon: "video",
-      }}
+      route={{ ...route, windowTitle: `${route.title} - Project Viewer` }}
       compactMenu
     >
-      <div className="media-screen">
-        {route.media ? (
-          <iframe
-            src={route.media}
-            title={route.title}
-            allow="fullscreen; encrypted-media; picture-in-picture"
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="strict-origin-when-cross-origin"
-          />
-        ) : (
-          <p>{route.title}</p>
-        )}
+      <div className="project-viewer-screen">
+        <ResponsiveImage
+          src={`/images/${route.image}`}
+          alt={`${route.title} screenshot`}
+          eager
+        />
       </div>
-      <div className="media-controls" aria-hidden="true">
-        <div className="media-track">
-          <span />
+      <div className="project-viewer-controls">
+        <div>
+          <h2>{route.title}</h2>
+          <p>{route.description}</p>
         </div>
-        <div className="media-dividers">
-          <i />
-          <i />
-          <i />
-        </div>
+        <nav aria-label="Project gallery controls">
+          <Link
+            to={`/projects/${previous.id}`}
+            className="classic-button"
+            aria-label={`Previous project: ${previous.title}`}
+          >
+            Previous
+          </Link>
+          <output aria-label="Project number">
+            {index + 1} / {PROJECTS.length}
+          </output>
+          <Link
+            to={`/projects/${next.id}`}
+            className="classic-button"
+            aria-label={`Next project: ${next.title}`}
+          >
+            Next
+          </Link>
+          <SiteLink to={route.href} className="classic-button">
+            Open live demo
+          </SiteLink>
+        </nav>
       </div>
     </WindowFrame>
   );
@@ -457,55 +497,36 @@ function Notepad({ route }) {
       compactMenu
     >
       <div className="notepad-body retro-scroll" tabIndex={0}>
-        {route.media ? (
-          <iframe
-            className="notepad-video"
-            src={route.media}
-            title={route.title}
-            allow="fullscreen; encrypted-media; picture-in-picture"
-            allowFullScreen
-            loading="lazy"
-          />
-        ) : (
-          <>
-            <h2>{route.title}</h2>
-            {route.description && <p>{route.description}</p>}
-            {route.paragraphs?.map((text, i) => (
-              <p key={i}>{text}</p>
-            ))}
-            {route.projectType && (
-              <p>
-                <strong>Project:</strong> {route.projectType}
-              </p>
-            )}
-            {(route.image || route.preview) && (
-              <ResponsiveImage
-                className="project-preview"
-                src={route.preview || `/images/${route.image}`}
-                alt={`${route.title} screenshot`}
-                eager
-              />
-            )}
-            {route.href && (
-              <SiteLink
-                className="classic-button project-visit"
-                to={route.href}
-              >
-                {route.linkLabel || "Open live project"}
-              </SiteLink>
-            )}
-            {route.note && <p className="project-note">{route.note}</p>}
-            {route.related?.length > 0 && (
-              <nav className="related-links" aria-label="Related pages">
-                {route.related.map((item) => (
-                  <SiteLink to={item.to} key={item.to}>
-                    {item.label}
-                  </SiteLink>
-                ))}
-              </nav>
-            )}
-          </>
-        )}
+        <>
+          <h2>{route.title}</h2>
+          {route.description && <p>{route.description}</p>}
+          {route.paragraphs?.map((text, i) => (
+            <p key={i}>{text}</p>
+          ))}
+          {route.projectType && (
+            <p>
+              <strong>
+                {route.path.startsWith("/skills") ? "Category" : "Project"}:
+              </strong>{" "}
+              {route.projectType}
+            </p>
+          )}
+          {route.href && (
+            <SiteLink className="classic-button project-visit" to={route.href}>
+              {route.linkLabel || "Open live project"}
+            </SiteLink>
+          )}
+          {route.note && <p className="project-note">{route.note}</p>}
+          {route.related?.length > 0 && (
+            <nav className="related-links" aria-label="Related pages">
+              {route.related.map((item) => (
+                <SiteLink to={item.to} key={item.to}>
+                  {item.label}
+                </SiteLink>
+              ))}
+            </nav>
+          )}
+        </>
       </div>
     </WindowFrame>
   );
@@ -514,11 +535,7 @@ function Bookshelf({ route }) {
   return (
     <WindowFrame
       route={route}
-      headerExtra={
-        <Link to={SITE.reference ? "/bookshelf/book" : "/resume/overview"}>
-          {SITE.reference ? "My Book" : "Full resume"}
-        </Link>
-      }
+      headerExtra={<Link to={"/resume/overview"}>{"Full resume"}</Link>}
     >
       <div className="bookshelf-heading">
         <h2>{route.title}</h2>
@@ -531,9 +548,7 @@ function Bookshelf({ route }) {
       <div className="bookshelf-body retro-scroll" tabIndex={0}>
         <aside className="bookshelf-index">
           <strong>
-            {SITE.reference
-              ? "Explore my favorite films, books, TV shows, & more."
-              : "Experience, education, and the tools I build with."}
+            {"Experience, education, and the tools I build with."}
           </strong>
           <p>List:</p>
           <nav
@@ -549,15 +564,11 @@ function Bookshelf({ route }) {
           </nav>
         </aside>
         <div className="bookshelf-cover">
-          <ResponsiveImage
-            src={route.cover || SITE.portrait}
-            alt={SITE.name}
-            eager
-          />
+          <ResponsiveImage src={SITE.portrait} alt={SITE.name} eager />
           <p>
             {SITE.name}
             <br />
-            <span>{SITE.reference ? "'95" : "Frontend Developer"}</span>
+            <span>{"Frontend Developer"}</span>
           </p>
         </div>
       </div>
@@ -571,16 +582,14 @@ function Article({ route }) {
     <WindowFrame
       route={{
         ...route,
-        windowTitle: SITE.reference
-          ? `${SITE.shortName}'s Bookshelf`
-          : `Resume - ${SITE.name}`,
-        icon: "bookshelf",
+        windowTitle: `Resume - ${SITE.name}`,
+        icon: "book",
       }}
     >
       <div className="article-heading">
         <h2>
           {SITE.name}
-          {SITE.reference ? "'s Bookshelf '95" : "'s Resume"}
+          {"'s Resume"}
         </h2>
         <nav aria-label="Resume navigation">
           {index > 0 && (
@@ -589,7 +598,7 @@ function Article({ route }) {
             </Link>
           )}
           <Link className="classic-button" to={SITE.resume}>
-            {SITE.reference ? "Bookshelf Home" : "Resume Home"}
+            {"Resume Home"}
           </Link>
           {index >= 0 && index < siblings.length - 1 && (
             <Link className="classic-button" to={siblings[index + 1].to}>
@@ -639,23 +648,16 @@ function AboutNavigation() {
     <nav className="about-navigation" aria-label="About pages">
       <Link to={SITE.about}>HOME</Link>
       <Link to={`${SITE.about}/about`}>ABOUT</Link>
-      <Link to={`${SITE.about}/${SITE.reference ? "therapy" : "approach"}`}>
-        {SITE.reference ? "THERAPY" : "APPROACH"}
-      </Link>
+      <Link to={`${SITE.about}/${"approach"}`}>{"APPROACH"}</Link>
       <Link to={SITE.gallery}>GALLERY</Link>
-      <SiteLink
-        to={
-          SITE.reference
-            ? "https://www.instagram.com/gravydoodle/"
-            : SITE.socials.find((s) => s.label === "Instagram").href
-        }
-      >
+      <SiteLink to={SITE.socials.find((s) => s.label === "Instagram").href}>
         INSTAGRAM
       </SiteLink>
     </nav>
   );
 }
 function About({ route }) {
+  const reduced = useContext(MotionPreference);
   return (
     <WindowFrame route={route}>
       <AboutNavigation />
@@ -667,8 +669,17 @@ function About({ route }) {
         {route.kind === "gallery" ? (
           <div className="photo-gallery">
             {(route.photos || []).map((photo, i) => (
-              <figure key={photo.src}>
-                <SiteLink to={photo.to || SITE.projects}>
+              <motion.figure
+                key={photo.src}
+                initial={{ opacity: reduced ? 1 : 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true, amount: 0.02 }}
+                transition={{ duration: reduced ? 0 : 0.18 }}
+              >
+                <SiteLink
+                  to={photo.to || SITE.projects}
+                  aria-label={`View ${photo.label}`}
+                >
                   <ResponsiveImage
                     src={photo.src}
                     alt={photo.label}
@@ -676,31 +687,19 @@ function About({ route }) {
                   />
                   <figcaption>{photo.label}</figcaption>
                 </SiteLink>
-              </figure>
+              </motion.figure>
             ))}
           </div>
         ) : (
           <>
             <h2 className="about-display">{route.heading || route.title}</h2>
             <div className="about-intro">
-              <ResponsiveImage
-                src={route.heroImage || SITE.portrait}
-                alt={route.title}
-                eager
-              />
+              <ResponsiveImage src={SITE.portrait} alt={route.title} eager />
               <div>
                 <p className="dictionary-type">{route.subtitle || "(noun.)"}</p>
                 {route.paragraphs?.map((text, i) => (
                   <p key={i}>{text}</p>
                 ))}
-                {route.audio && (
-                  <audio
-                    src={route.audio}
-                    controls
-                    preload="metadata"
-                    aria-label={route.title}
-                  />
-                )}
               </div>
             </div>
             {route.sections?.map((section) => (
@@ -711,14 +710,19 @@ function About({ route }) {
             ))}
             <div className="about-site-links">
               <Link to={`${SITE.about}/about`}>About {SITE.shortName}</Link>
-              <Link
-                to={`${SITE.about}/${SITE.reference ? "therapy" : "approach"}`}
-              >
-                {SITE.reference ? "Therapy Dog" : "How I work"}
-              </Link>
+              <Link to={`${SITE.about}/${"approach"}`}>{"How I work"}</Link>
               <Link to={SITE.gallery}>Photo Gallery</Link>
               <Link to="/desktop">Exit</Link>
             </div>
+            <p className="site-credits">
+              <a
+                href="/retro/NOTICE.txt"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Site credits & font licenses
+              </a>
+            </p>
           </>
         )}
       </div>
@@ -742,9 +746,9 @@ function Archive({ route }) {
             </h2>
             <p>
               <em>
-                {SITE.reference
-                  ? "Explore the Archive Search Engine of Adam Lambert"
-                  : "A collection of websites, web apps, and interface experiments."}
+                {
+                  "A collection of websites, web apps, and interface experiments."
+                }
               </em>
             </p>
           </div>
@@ -766,58 +770,6 @@ function Archive({ route }) {
     </WindowFrame>
   );
 }
-function Personal({ route }) {
-  const [level, setLevel] = useState(0);
-  if (!SITE.reference) return <Explorer route={route} />;
-  return (
-    <WindowFrame route={route}>
-      <ExplorerToolbar route={route} />
-      <div className="explorer-body retro-scroll">
-        <aside className="explorer-sidebar">
-          <Icon name="folder" size={50} />
-          <h2>
-            {["Personal", "Adam Only", "Private Files", "Don't Open"][level]}
-          </h2>
-          <div className="rainbow-rule" />
-          <p>
-            {
-              [
-                "Personal Folder. Do not open without permission.",
-                "This is my personal folder. Don't open it.",
-                "Final Warning. don't do it.",
-                "Don't Open",
-              ][level]
-            }
-          </p>
-          <p className="folder-meta">
-            Created:
-            <br />
-            12/11/25 6:22 PM
-          </p>
-          <p className="folder-size">Size: 1KB</p>
-        </aside>
-        <div className="file-grid">
-          {level < 3 ? (
-            <button className="file-item" onClick={() => setLevel(level + 1)}>
-              <Icon name="folder" size={50} />
-              <span>
-                {["Adam Only", "Private Files", "CONFIDENTIAL"][level]}
-              </span>
-            </button>
-          ) : (
-            <SiteLink
-              to="https://www.youtube.com/watch?v=NGcUm3Uy5rQ"
-              className="file-item"
-            >
-              <Icon name="document" size={50} />
-              <span>LAST CHANCE</span>
-            </SiteLink>
-          )}
-        </div>
-      </div>
-    </WindowFrame>
-  );
-}
 function Dos({ route }) {
   return (
     <WindowFrame
@@ -829,29 +781,22 @@ function Dos({ route }) {
       </div>
       <div className="dos-body retro-scroll" tabIndex={0}>
         <p>
-          {SITE.name} 95, 98, 2000, 2001
+          {SITE.name} 98
           <br />
           &nbsp;&nbsp; (C) Copyright {SITE.name} {new Date().getFullYear()}
         </p>
         <p>C:\{SITE.directory}\Desktop&gt;\</p>
         <p>
           You found my SECRET! Welcome to my personal website. This is my
-          container for{" "}
-          {SITE.reference
-            ? "my writing, my work, my dog Gravy"
-            : "my projects, my experience, and the things I build"}
-          . Click around. You may find even more Easter eggs. :)
+          container for {"my projects, my experience, and the things I build"}.
+          Click around. You may find even more Easter eggs. :)
         </p>
         <Link to="/desktop">ENTER THE WEBSITE</Link>
-        {route.ascii ? (
-          <pre className="dos-ascii">{route.ascii}</pre>
-        ) : (
-          <ResponsiveImage
-            className="dos-portrait"
-            src={SITE.portrait}
-            alt={SITE.name}
-          />
-        )}
+        <ResponsiveImage
+          className="dos-portrait"
+          src={SITE.portrait}
+          alt={SITE.name}
+        />
       </div>
     </WindowFrame>
   );
@@ -862,7 +807,7 @@ function Secret({ route }) {
       route={{ ...route, title: "How did you get here?", icon: null }}
     >
       <div className="secret-body">
-        {!SITE.reference && (
+        {
           <div>
             <p>C:\{SITE.directory}\SECRET&gt;</p>
             <h2>You found the hidden directory.</h2>
@@ -873,7 +818,7 @@ function Secret({ route }) {
             <Link to="/404">Try the blue screen</Link>
             <Link to={SITE.documents}>Return to My Documents</Link>
           </div>
-        )}
+        }
       </div>
     </WindowFrame>
   );
@@ -904,21 +849,9 @@ function HomeMenu({ onClose, buttonRef }) {
   }, []);
   const items = [
     ["My Documents", SITE.documents, "folder"],
-    [
-      SITE.reference ? "Adam's Bookshelf" : "My Resume",
-      SITE.resume,
-      "bookshelf",
-    ],
-    [
-      SITE.reference ? "Gravy" : "About Arshia",
-      SITE.about,
-      SITE.reference ? "dog" : SITE.portrait,
-    ],
-    [
-      SITE.reference ? "Narrative Supply" : "My GitHub",
-      SITE.github,
-      SITE.reference ? "narrative" : "/favicon.svg",
-    ],
+    ["My Resume", SITE.resume, "book"],
+    ["About Arshia", SITE.about, SITE.portrait],
+    ["My GitHub", SITE.github, "/favicon.svg"],
     ["My Archive", "/archive", "folder"],
     ["Shut Down", "/404", "stop"],
   ];
@@ -1018,6 +951,7 @@ function Taskbar({ route, minimized, onRestore, onMinimize }) {
     <footer className="taskbar">
       <div className="home-area" ref={area}>
         <ClassicButton
+          id="home-button"
           className={`home-button ${open ? "pressed" : ""}`}
           aria-haspopup="menu"
           aria-expanded={open}
@@ -1043,10 +977,10 @@ function Taskbar({ route, minimized, onRestore, onMinimize }) {
       </div>
       <div className="quick-launch" aria-label="Quick launch">
         <Link to={SITE.about} aria-label={`About ${SITE.shortName}`}>
-          <Icon name={SITE.reference ? "dog" : SITE.portrait} />
+          <Icon name={SITE.portrait} />
         </Link>
         <SiteLink to={SITE.github} aria-label="GitHub">
-          <Icon name={SITE.reference ? "narrative" : "/favicon.svg"} />
+          <Icon name={"/favicon.svg"} />
         </SiteLink>
         <SiteLink to={SITE.linkedin} aria-label="LinkedIn">
           <Icon name="linkedin" />
@@ -1077,21 +1011,9 @@ function Taskbar({ route, minimized, onRestore, onMinimize }) {
 function DesktopIcons() {
   const items = [
     ["My Documents", SITE.documents, "folder"],
-    [
-      SITE.reference ? "Adam's Bookshelf" : "My Resume",
-      SITE.resume,
-      "bookshelf",
-    ],
-    [
-      SITE.reference ? "Gravy" : "About Arshia",
-      SITE.about,
-      SITE.reference ? "dog" : SITE.portrait,
-    ],
-    [
-      SITE.reference ? "Narrative Supply" : "My GitHub",
-      SITE.github,
-      SITE.reference ? "narrative" : "/favicon.svg",
-    ],
+    ["My Resume", SITE.resume, "book"],
+    ["About Arshia", SITE.about, SITE.portrait],
+    ["My GitHub", SITE.github, "/favicon.svg"],
     ["My LinkedIn", SITE.linkedin, "linkedin"],
   ];
   return (
@@ -1099,14 +1021,14 @@ function DesktopIcons() {
       <nav className="desktop-icons" aria-label="Desktop shortcuts">
         {items.map(([label, to, icon]) => (
           <SiteLink className="desktop-shortcut" key={to} to={to}>
-            <Icon name={icon} size={50} />
+            <ShortcutArt name={icon} shortcut={to.startsWith("https://")} />
             <span>{label}</span>
           </SiteLink>
         ))}
       </nav>
       <Link to="/personal" className="desktop-shortcut personal-shortcut">
         <Icon name="folder" size={50} />
-        <span>{SITE.reference ? "Personal" : "Contact"}</span>
+        <span>{"Contact"}</span>
       </Link>
     </>
   );
@@ -1117,8 +1039,6 @@ function ActiveWindow({ route }) {
       return <Login route={route} />;
     case "explorer":
       return <Explorer route={route} />;
-    case "media":
-      return <MediaWindow route={route} />;
     case "notepad":
       return <Notepad route={route} />;
     case "bookshelf":
@@ -1127,13 +1047,12 @@ function ActiveWindow({ route }) {
       return <Article route={route} />;
     case "about":
     case "gallery":
-    case "therapy":
     case "approach":
       return <About route={route} />;
     case "archive":
       return <Archive route={route} />;
-    case "personal":
-      return <Personal route={route} />;
+    case "project":
+      return <ProjectViewer route={route} />;
     case "dos":
       return <Dos route={route} />;
     case "secret":
@@ -1146,15 +1065,30 @@ function Desktop() {
   const location = useLocation(),
     navigate = useNavigate(),
     workspace = useRef(null);
+  const focusReturn = useRef(null);
   const [minimized, setMinimized] = useState(null);
   const route =
     normalizedRoutes.get(normalizePath(location.pathname)) || ERROR_ROUTE;
+  function rememberDesktopFocus() {
+    const roots = new Set([
+      SITE.documents,
+      SITE.resume,
+      SITE.about,
+      "/personal",
+    ]);
+    let page = route;
+    while (page?.parent && !roots.has(page.path))
+      page = routeMap.get(page.parent);
+    focusReturn.current = { target: roots.has(page?.path) ? page.path : null };
+  }
   const closeWindow = () => {
+    rememberDesktopFocus();
     setMinimized(null);
     navigate("/desktop");
   };
   const minimizeWindow = () => {
     if (route.kind !== "desktop") {
+      rememberDesktopFocus();
       setMinimized(route);
       navigate("/desktop");
     }
@@ -1163,6 +1097,21 @@ function Desktop() {
     document.title = `${SITE.name} '98${route.kind === "login" ? "" : ` - ${route.title}`}`;
     if (route.kind !== "desktop") setMinimized(null);
   }, [route]);
+  useEffect(() => {
+    if (route.kind !== "desktop" || !focusReturn.current) return;
+    const frame = requestAnimationFrame(() => {
+      const target = focusReturn.current?.target;
+      const element = minimized
+        ? document.querySelector(".task-item")
+        : target &&
+          document.querySelector(`.desktop-shortcut[href="${target}"]`);
+      (element || document.getElementById("home-button"))?.focus({
+        preventScroll: true,
+      });
+      focusReturn.current = null;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [route, minimized]);
   useEffect(() => {
     const escape = (event) => {
       if (

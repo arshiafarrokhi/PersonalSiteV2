@@ -1,45 +1,53 @@
-# Arshia Farrokhi — Personal Site V2
+# Arshia Farrokhi '98
 
-A responsive personal portfolio built with React, Tailwind CSS, Lucide icons, and Framer Motion. The entire page UI lives in `App.jsx`.
+A personal portfolio inside a Windows 98 desktop. React 19, Vite 7, Tailwind CSS 4, Framer Motion 12, and React Router 7.18.4. All UI and shared components live in `App.jsx`; public content and the route catalog live in `content.js`.
 
-Professional content follows the owner's latest resume: frontend roles at Pavan (2025–present), Asr Gooyesh Pardaz (2024–2025), and GH Company (2022–2023); four professional project references; skills, education, and languages. The original portrait and 12 personal project screenshots come from [Arshia's original portfolio](https://arshiafarrokhi.github.io/PersonalWebsite/). Images are served locally from `public/images`; contact uses LinkedIn, GitHub, and Instagram. The resume PDF and its phone/email are not included in the public repository.
+The visual reference is [Adam Lambert '98](https://www.adamclambert.com/). The interface is independently implemented; it does not embed the reference site's Framer application, analytics, or editor. The reference checkpoint and personalized version are separate commits. `reference-inventory.json` records all 110 original sitemap routes and their templates. `design-qa.md` records comparisons and acceptance checks. Asset provenance and font licensing are in `ASSET-NOTICES.md`.
 
-## Run locally
+## Development
 
 Requires Node.js 22.12 or newer.
 
 ```sh
 npm ci
 npm run dev
-```
-
-Open the local URL printed by Vite.
-
-```sh
+npm test
+npm run format:check
 npm run build
 npm run preview
 ```
 
-The production build goes to `dist/`. Vite's base path is `/` so scripts, styles, and local images load from the root on Vercel and the custom domain.
+Build output: `dist/`. No environment variables, backend, authentication service, or database are required. The welcome dialog is a playful guest entrance: any input works, and nothing is sent or saved. Its fields are discarded when entering the desktop.
 
-## Content and behavior
+## Content
 
-- Edit `PROFESSIONAL_PROJECTS`, `PROJECTS`, `SKILLS`, `EXPERIENCE`, `EDUCATION`, and `SOCIALS` in `App.jsx` to update the portfolio. Hero and about text are in the same file.
-- Professional references link to the original product sites. Avid Payment may require an account; private dashboard screens are not reproduced.
-- The project gallery filters between websites and web apps and can reveal all 12 projects.
-- Shared motion tokens, reveal variants, masked headings, and `MotionButton` keep entrance, hover, press, and scroll feedback consistent. Header navigation and gallery filters use shared layout indicators.
-- The portrait uses spring-smoothed pointer depth and a small scroll parallax on desktops with a fine pointer. Touch layouts and reduced-motion users receive a static portrait.
-- The gallery toggle stays in the filter toolbar so expansion does not move the next click target. The bottom collapse control returns keyboard focus to that toolbar.
-- The mobile menu supports Escape, keyboard focus containment, focus return, and scroll restoration.
-- `AnimatePresence` keeps the native modal open through its short exit animation, then restores scrolling and follows the selected section anchor. Browser history remains native.
-- Motion respects the device's reduced-motion preference. Images reserve their layout space and have an accessible failure state.
-- A native media-query subscription keeps reduced-motion changes reactive without remounting the page. The page supplies zero-duration transitions and static motion-value styles when reduction is enabled; `MotionConfig` leaves this explicit policy in control.
-- Project links open external demos. HTTP availability does not establish that every demo's APIs or internal interactions still work.
+`content.js` preserves the existing portfolio and latest owner-approved resume: four professional references, twelve personal projects with original local screenshots, roles at Pavan / Asr Gooyesh Pardaz / GH Company, education, skills, and languages. French has no invented proficiency level. Contact is through the existing LinkedIn, GitHub, and Instagram links. No resume PDF, phone number, or email is published.
 
-## Hosting
+- My Documents → My Work, My Projects, Skills.
+- My Work → professional project notes and original website links. Avid Payment may require an account; private dashboards are not reproduced.
+- My Projects → real project screenshots, previous/next navigation, and external live demos.
+- My Resume → full resume, individual roles, education, and languages.
+- About Arshia → biography, working approach, and the twelve-image project gallery.
+- My Archive → all personal projects, websites, and web apps.
+- Contact → social profiles and playful hidden folders.
+- Help → MS-DOS page. The hidden title-bar control opens another themed directory. Shut Down leads to the recoverable blue error screen.
 
-The Vercel project `personal-site-v2` is connected to this repository. Pushes to `main` create production deployments. Use the Vite framework preset, `npm run build`, and the `dist` output directory, with the repository root as the root directory. No environment variables or backend services are required.
+Edit the exported content arrays to update facts. The route catalog derives project, skill, resume, and archive entries from those arrays. `npm test` checks route uniqueness, parent chains, internal links, project images/destinations, resume counts, content privacy, and hosting rewrite behavior.
 
-The primary site URL is `https://arshiafarrokhi.ir/`. Configure `www.arshiafarrokhi.ir` as a permanent redirect to the primary domain. DNS must match the records or nameservers displayed in the project's Vercel Domains settings; domain registration stays with the registrar. Vercel provisions HTTPS after DNS verification.
+## Interaction and accessibility
 
-This is a single page with native section fragments (for example, `/#work`), so it does not need a catch-all rewrite for client-side routes. When deliberately hosting under a subdirectory, override Vite's base for that build (for example, `npm run build -- --base=/PersonalSiteV2/`). Do not use that subdirectory base for Vercel root deployments.
+The shared desktop renders one active route window. Browser Back/Forward and direct deep links work normally. Back and Up follow the declared parent folder. Closing returns focus to the originating desktop section; minimizing creates a taskbar button that restores the window. Desktop title bars support constrained dragging, reset after resizing, and keep window controls reachable. Touch/tablet windows use the viewport above the taskbar.
+
+The Home menu supports arrows, Home/End, Escape, outside dismissal, and keyboard focus return. Scrollable panes are keyboard accessible, links and buttons have visible focus, images reserve their space and have failure states, and invalid routes use the blue error page with recovery links. Decorative commands in the original chrome remain decorative rather than pretending to copy/delete/download files.
+
+Framer Motion handles short window transitions, menu entrance/exit, press feedback, drag, and gallery reveals. A reactive `matchMedia` subscription respects reduced motion, including preference changes while mounted. The application supplies explicit zero-duration/static states; `MotionConfig` leaves this policy in control.
+
+## Git and Vercel
+
+- `v1` preserves `3140ae6e09e2a7d1026a92ea4026be8a61bae1d6`.
+- `v2` contains the Windows 98 portfolio and is deployed as a separate Vercel **Preview**.
+- `main` remains the production branch. The existing `arshiafarrokhi.ir` domain and DNS are unchanged.
+
+Use the existing Vercel project `arshias-projects/personal-site-v2`, Vite preset, repository root, `npm run build`, and `dist` output. Vite's base remains `/`. `vercel.json` serves client routes from `index.html` while excluding JavaScript/CSS, images, fonts, and favicon resource paths from the fallback. Preview access follows the project's existing Vercel protection settings.
+
+External links retain the owner's original destinations. A link or an HTTP response does not establish that every third-party demo's APIs or sign-in flow still work.
