@@ -42,6 +42,20 @@ Source captures, implementation captures, comparison composites, route-check JSO
 
 ## Hosted verification
 
-Pending Vercel Preview publication; production remains on `main` / `3140ae6`.
+- Branch Preview: <https://personal-site-v2-git-v2-arshias-projects.vercel.app/>. Vercel deployment `9RUTN8JwgQhAtX8uSCEr8rSnMJXG`, runtime commit `497cf7f`, environment **Preview**, status **Ready**. Production was independently shown as `main` / `3140ae6`; no promotion or DNS changes were made.
+- Authenticated browser: entry page rendered, `/projects/music` and `/resume/pavan` opened directly and survived Refresh; `/unknown.file` opened the themed 404 and survived Refresh. Music screenshot decoded at its original 1920px width. No console warnings/errors were captured in the checked hosted states.
+- The browser executed `/assets/index-Dv2nCX98.js` and applied `/assets/index-Ktb6_D_a.css`, both from the root. The exported hosted stylesheet is byte-identical (SHA-256 comparison) to the local production build. All three hosted font assets were exported successfully with MIME `font/woff2`. This verifies actual application delivery rather than treating an SSO login response as the app.
+- Existing Vercel authentication remains enabled: a separate unauthenticated HTTP request returned **302 to Vercel SSO**. Those redirected login responses were not counted as successful asset checks. Direct raw JavaScript-document inspection was blocked by the browser client; JavaScript validation instead used actual module execution, route rendering, and clean console results. No authentication protection was weakened.
+- Public production still returns HTTP 200 with unchanged `/assets/index-DNRnZ0Fw.js` and `/assets/index-CfTJEOiZ.css`. Remote `main` and `v1` still point to `3140ae6e09e2a7d1026a92ea4026be8a61bae1d6`.
+- Final `npm test`, `npm run build`, `npm run format:check`, and `git diff --check` passed. Lint/type-check commands were unavailable, as noted above.
 
-final result: blocked
+## Final visual comparison
+
+Source truth: `source-login-desktop.png` and `source-gallery-mobile.png`; implementation: `personal-login-desktop-final.png` and `personal-gallery-390-final.png`, captured from the browser. Combined inputs: `comparison-personal-login.png` (1536×844 views scaled equally to half-size, plus native 672×220 crops) and `comparison-personal-gallery.png` (390×844 views at native density). These combined inputs were opened and reviewed together, including text, control frames, assets, color, and spacing. Content/identity changes are expected; no actionable P0/P1/P2 findings remain. Minor bevel spacing and the more compact mobile About tab strip are P3 refinements.
+
+Implementation capture fingerprints before requested cleanup:
+
+- Desktop login: `cba0611a7bc13a434860a2ee9ff16f7c0ea4d8c0230252af0014b17dd43f40d6`.
+- Mobile gallery: `97aae09f863ab7eef542447757710fba051f42c73fc8d9471463bf326e10f9ed`.
+
+final result: passed
