@@ -45,8 +45,10 @@ Framer Motion handles short window transitions, menu entrance/exit, press feedba
 ## Git and Vercel
 
 - `v1` preserves `3140ae6e09e2a7d1026a92ea4026be8a61bae1d6`.
-- `v2` contains the Windows 98 portfolio and is deployed as a separate Vercel [Preview](https://personal-site-v2-git-v2-arshias-projects.vercel.app/). Access requires the existing authorized Vercel sign-in.
-- `main` remains the production branch. The existing `arshiafarrokhi.ir` domain and DNS are unchanged.
+- `v2` contains the Windows 98 portfolio. Its separate Vercel [Preview](https://personal-site-v2-git-v2-arshias-projects.vercel.app/) retains the existing authorized Vercel sign-in requirement.
+- `main` is the production branch and now contains the Windows 98 version, published at [arshiafarrokhi.ir](https://arshiafarrokhi.ir/). The domain and DNS configuration are unchanged.
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for the verified Vercel controls and deployment links for switching between v1 and v2. Promoting a previous deployment changes the live version without changing Git; a later successful deployment from `main` can replace that selection.
 
 Use the existing Vercel project `arshias-projects/personal-site-v2`, Vite preset, repository root, `npm run build`, and `dist` output. Vite's base remains `/`. `vercel.json` serves client routes from `index.html` while excluding JavaScript/CSS, images, fonts, and favicon resource paths from the fallback. Preview access follows the project's existing Vercel protection settings.
 

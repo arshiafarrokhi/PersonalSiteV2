@@ -59,3 +59,16 @@ Implementation capture fingerprints before requested cleanup:
 - Mobile gallery: `97aae09f863ab7eef542447757710fba051f42c73fc8d9471463bf326e10f9ed`.
 
 final result: passed
+
+## Production promotion — 2026-10-18
+
+The owner's subsequent request authorized replacing v1 on the main domain. `main` was fast-forwarded from `3140ae6` to `e458e2d` and pushed without rewriting history; `v1` remains at its original commit. Vercel's existing Production branch remains `main`, with automatic domain assignment enabled. DNS and authentication protection settings were not changed.
+
+- Production deployment [HXUmWHZJhjFbsk9grudYRHRVvxMu](https://vercel.com/arshias-projects/personal-site-v2/HXUmWHZJhjFbsk9grudYRHRVvxMu) showed **Ready**, **Production**, source `main` / `e458e2d`, and `arshiafarrokhi.ir` assigned. Deployment URL: <https://personal-site-v2-gvncoqtnd-arshias-projects.vercel.app/>.
+- Unauthenticated requests with redirects disabled returned **200** for the apex, JavaScript, CSS, all three fonts, cloud wallpaper, portrait, and the three checked deep routes. No Vercel SSO response was counted as application delivery. JavaScript MIME was `application/javascript`; CSS was `text/css`; fonts were `font/woff2`. JavaScript and CSS were byte-identical to the local production build.
+- JavaScript SHA-256: `55e0c868e5c5adf857633868c7e4b9290e905b6d76b3525221824de457f8767c`. CSS SHA-256: `89508329dcf61aee233ac2cfba577a1fbbc53f1d3d9b5c9a6f1a7d05f664d9d4`.
+- The public browser rendered the Windows 98 welcome screen; both its visible Enter link and keyboard form submission navigated to `/desktop`. `/projects/music`, `/resume/pavan`, and `/unknown.file` rendered directly and survived Refresh. The project screenshot decoded at 1920px; blue-screen recovery returned to login. No warnings/errors were captured in the checked browser states.
+- `https://www.arshiafarrokhi.ir/` returned **308** to `https://arshiafarrokhi.ir/`.
+- The original v1 deployment's **Deployment Actions → Promote** dialog listed the correct v1 commit and apex domain. It was canceled; no temporary rollback was performed. Version-switch instructions and immutable deployment links are in `DEPLOYMENT.md`. Deployment retention and subsequent automatic `main` deployments are explicitly covered there.
+- All eight `npm test` checks and `npm run build` passed again before publishing. This hosting change did not modify the UI/runtime. The earlier responsive/device/browser limitations still apply; no new lint/type-check command was introduced.
+- The first format check after switching branches found CRLF checkouts from system Git's `core.autocrlf=true`. Added `.gitattributes` to keep text at LF and normalized the working files; no runtime content changed. The subsequent complete `npm run format:check` and `git diff --check` passed.
