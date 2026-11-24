@@ -1,9 +1,14 @@
 {
   "rewrites": [
     {
-      "source": "/ololob/:path*",
+      "source": "/ololob",
       "has": [{ "type": "host", "value": "arshiafarrokhi.ir" }],
-      "destination": "https://ololob-origin.arshiafarrokhi.ir/ololob/:path*"
+      "destination": "https://ololob-origin.arshiafarrokhi.ir/ololob/"
+    },
+    {
+      "source": "/ololob/:path(.*)",
+      "has": [{ "type": "host", "value": "arshiafarrokhi.ir" }],
+      "destination": "https://ololob-origin.arshiafarrokhi.ir/ololob/:path"
     },
     {
       "source": "/((?!assets/|images/|retro/|favicon\\.svg).*)",

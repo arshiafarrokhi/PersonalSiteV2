@@ -117,9 +117,14 @@ test("Vercel routes handle deep links and dotted unknown IDs without rewriting a
 test("The Ololob domain rewrite takes precedence over the portfolio fallback", () => {
   const { rewrites } = JSON.parse(fs.readFileSync("vercel.json", "utf8"));
   assert.deepEqual(rewrites[0], {
-    source: "/ololob/:path*",
+    source: "/ololob",
     has: [{ type: "host", value: "arshiafarrokhi.ir" }],
-    destination: "https://ololob-origin.arshiafarrokhi.ir/ololob/:path*",
+    destination: "https://ololob-origin.arshiafarrokhi.ir/ololob/",
   });
-  assert.equal(rewrites[1].destination, "/index.html");
+  assert.deepEqual(rewrites[1], {
+    source: "/ololob/:path(.*)",
+    has: [{ type: "host", value: "arshiafarrokhi.ir" }],
+    destination: "https://ololob-origin.arshiafarrokhi.ir/ololob/:path",
+  });
+  assert.equal(rewrites[2].destination, "/index.html");
 });
