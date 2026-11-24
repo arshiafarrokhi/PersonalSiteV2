@@ -99,7 +99,9 @@ test("public output excludes private resume and audio/video files", () => {
 });
 test("Vercel routes handle deep links and dotted unknown IDs without rewriting assets", () => {
   const config = JSON.parse(fs.readFileSync("vercel.json", "utf8"));
-  const rule = new RegExp(`^${config.rewrites[0].source}$`);
+  const fallback = config.rewrites.find(({ destination }) => destination === "/index.html");
+  assert.ok(fallback);
+  const rule = new RegExp(`^${fallback.source}$`);
   for (const path of ["/", "/projects/music", "/resume/pavan", "/unknown.file"])
     assert.ok(rule.test(path), path);
   for (const path of [
@@ -110,4 +112,14 @@ test("Vercel routes handle deep links and dotted unknown IDs without rewriting a
   ])
     assert.ok(!rule.test(path), path);
   assert.match(fs.readFileSync("vite.config.js", "utf8"), /base:\s*"\/"/);
+});
+
+test("The Ololob domain rewrite takes precedence over the portfolio fallback", () => {
+  const { rewrites } = JSON.parse(fs.readFileSync("vercel.json", "utf8"));
+  assert.deepEqual(rewrites[0], {
+    source: "/ololob/:path*",
+    has: [{ type: "host", value: "arshiafarrokhi.ir" }],
+    destination: "https://ololob-origin.arshiafarrokhi.ir/ololob/:path*",
+  });
+  assert.equal(rewrites[1].destination, "/index.html");
 });
